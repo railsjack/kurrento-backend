@@ -10,7 +10,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "crypto": "^1.0.1",
     "express": "^4.16.4",
+    "express-force-ssl": "^0.3.2",
     "kurento-client": "^6.13.0",
     "minimist": "1.2.0",
     "options": "0.0.6",

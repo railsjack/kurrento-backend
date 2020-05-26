@@ -1,21 +1,37 @@
 // requires
 const express = require('express');
+const fs = require('fs');
 const app = express();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
-var kurento = require('kurento-client');
-var minimist = require('minimist');
+const kurento = require('kurento-client');
+const minimist = require('minimist');
 const config = require('./config');
+const https = require('https');
+
+//Setup https server
+const options =
+    {
+        key: fs.readFileSync('config/keys/server.key'),
+        cert: fs.readFileSync('config/keys/server.crt')
+    };
+const server = https.createServer(options, app);
+
+//Initialize the socket server
+
+const io = require('socket.io')(server);
+
 // variables
-var kurentoClient = null;
-var iceCandidateQueues = {};
+let kurentoClient = null;
+const iceCandidateQueues = {};
+
+// listen
+server.listen(config.server_port, function () {
+    console.log('server up and running at %s port', config.server_port);
+});
 
 // constants
-var argv = minimist(process.argv.slice(2), {
-    default: {
-        as_uri: config.as_uri,
-        ws_uri: config.ws_uri
-    }
+const {as_uri, ws_uri} = config;
+const argv = minimist(process.argv.slice(2), {
+    default: {as_uri, ws_uri}
 });
 
 // express routing
@@ -24,7 +40,6 @@ app.use(express.static('public'));
 // signaling
 io.on('connection', function (socket) {
     console.log('a user connected');
-
     socket.on('message', function (message) {
         console.log('Message received: ', message.event);
 
@@ -53,7 +68,6 @@ io.on('connection', function (socket) {
                 });
                 break;
         }
-
     });
 });
 
@@ -69,12 +83,12 @@ function joinRoom(socket, username, roomname, callback) {
                 return callback(err);
             }
 
-            var user = {
+            const user = {
                 id: socket.id,
                 name: username,
                 outgoingMedia: outgoingMedia,
                 incomingMedia: {}
-            }
+            };
 
             let iceCandidateQueue = iceCandidateQueues[user.id];
             if (iceCandidateQueue) {
@@ -102,7 +116,7 @@ function joinRoom(socket, username, roomname, callback) {
 
             let existingUsers = [];
             for (let i in myRoom.participants) {
-                if (myRoom.participants[i].id != user.id) {
+                if (myRoom.participants[i].id !== user.id) {
                     existingUsers.push({
                         id: myRoom.participants[i].id,
                         name: myRoom.participants[i].name
@@ -150,7 +164,7 @@ function addIceCandidate(socket, senderid, roomname, iceCandidate, callback) {
     let user = io.sockets.adapter.rooms[roomname].participants[socket.id];
     if (user != null) {
         let candidate = kurento.register.complexTypes.IceCandidate(iceCandidate);
-        if (senderid == user.id) {
+        if (senderid === user.id) {
             if (user.outgoingMedia) {
                 user.outgoingMedia.addIceCandidate(candidate);
             } else {
@@ -174,12 +188,12 @@ function addIceCandidate(socket, senderid, roomname, iceCandidate, callback) {
 
 // useful functions
 function getRoom(socket, roomname, callback) {
-    var myRoom = io.sockets.adapter.rooms[roomname] || {length: 0};
-    var numClients = myRoom.length;
+    let myRoom = io.sockets.adapter.rooms[roomname] || {length: 0};
+    let numClients = myRoom.length;
 
     console.log(roomname, ' has ', numClients, ' clients');
 
-    if (numClients == 0) {
+    if (numClients === 0) {
         socket.join(roomname, () => {
             myRoom = io.sockets.adapter.rooms[roomname];
             getKurentoClient((error, kurento) => {
@@ -268,8 +282,3 @@ function getKurentoClient(callback) {
         callback(null, kurentoClient);
     });
 }
-
-// listen
-http.listen(3000, function () {
-    console.log('Example app listening on port 3000!');
-});
