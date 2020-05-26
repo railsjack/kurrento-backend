@@ -1,0 +1,19 @@
+{
+  "name": "on-stage-video-conferencing",
+  "version": "1.0.0",
+  "description": "This project is the webrtc video conferencing software ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.4",
+    "kurento-client": "^6.13.0",
+    "minimist": "1.2.0",
+    "options": "0.0.6",
+    "socket.io": "^2.2.0"
+  }
+}
