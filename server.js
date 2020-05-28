@@ -18,7 +18,19 @@ server.listen(config.server_port, function () {
 });
 
 //Initialize the socket server
-const io = require('socket.io')(server, { origins: '*:*'});
+const io = require('socket.io')(server,
+    {
+        handlePreflightRequest: (req, res) => {
+            const headers = {
+                "Access-Control-Allow-Headers": "Content-Type, Authorization",
+                "Access-Control-Allow-Origin": '*', //or the specific origin you want to give access to,
+                "Access-Control-Allow-Credentials": true
+            };
+            res.writeHead(200, headers);
+            res.end();
+        }
+    }
+);
 const SocketEvent = new socketEvents(io);
 
 // express routing
