@@ -22,6 +22,13 @@ const io = require('socket.io')(server);
 const SocketEvent = new socketEvents(io);
 
 // express routing
+app.use(function (req, res, next) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    next();
+});
 app.use('/api', (req, res, next) => {
     req.SocketEvent = SocketEvent;
     next();
