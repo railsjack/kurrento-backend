@@ -18,7 +18,7 @@ server.listen(config.server_port, function () {
 });
 //Initialize the socket server
 const io = require('socket.io')(server);
-io.origins(['*']);
+io.origins('*:*'); // for latest version
 const SocketEvent = new socketEvents(io);
 
 // express routing
