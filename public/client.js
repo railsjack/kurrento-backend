@@ -50,7 +50,6 @@ socket.on('message', message => {
             break;
     }
 });
-
 // handlers functions
 function receiveVideo(userid, username) {
     const video = document.createElement('video');
@@ -59,7 +58,7 @@ function receiveVideo(userid, username) {
     const name = document.createElement('div');
     video.id = userid;
     video.autoplay = true;
-    video.muted = true;
+    video.muted = false;
     name.appendChild(document.createTextNode(username));
     div.appendChild(video);
     div.appendChild(name);
@@ -76,6 +75,10 @@ function receiveVideo(userid, username) {
 
     const options = {
         remoteVideo: video,
+        mediaConstraints: {
+            audio:true,
+            video:true
+        },
         onicecandidate: onIceCandidate
     };
 
@@ -118,6 +121,7 @@ function onExistingParticipants(userid, existingUsers) {
     const name = document.createElement('div');
     video.id = userid;
     video.autoplay = true;
+    video.muted = false;
     name.appendChild(document.createTextNode(userName));
     div.appendChild(video);
     div.appendChild(name);

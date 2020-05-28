@@ -9,4 +9,4 @@ In the project root directory, run this command:
 
 ## Configuration
 
-You can change the port of the server and remote socket url in the `config/index.js`
+You can change the port of the server and remote socket url in the `config/api.js`
