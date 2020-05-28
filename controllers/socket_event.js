@@ -61,6 +61,7 @@ class SocketEvent {
                 });
 
                 let existingUsers = [];
+                console.log('myRoom.participants',myRoom.participants);
                 for (let i in myRoom.participants) {
                     if (myRoom.participants[i].id !== user.id) {
                         existingUsers.push({
