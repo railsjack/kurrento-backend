@@ -16,7 +16,11 @@ const server = https.createServer(options, app);
 server.listen(config.server_port, function () {
     console.log('server up and running at %s port', config.server_port);
 });
-
+app.all('/*', function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    next();
+});
 //Initialize the socket server
 const io = require('socket.io')(server);
 io.set('origins', '*');
