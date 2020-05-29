@@ -1,7 +1,8 @@
 const express = require('express');
 const fs = require('fs');
-const config = require('./config');
 const https = require('https');
+const cors = require('cors');
+const config = require('./config');
 const socketEvents = require('./controllers/socket_event');
 const router = require('./routes/api');
 //Setup https server
@@ -16,18 +17,32 @@ const server = https.createServer(options, app);
 server.listen(config.server_port, function () {
     console.log('server up and running at %s port', config.server_port);
 });
+console.log('hello world')
 //Initialize the socket server
-const io = require('socket.io')(server);
-io.origins('*:*'); // for latest version
+const io = require('socket.io')(server, {
+    handlePreflightRequest: (req, res) => {
+        const headers = {
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            "Access-Control-Allow-Origin": "*", //or the specific origin you want to give access to,
+            "Access-Control-Allow-Credentials": true
+        };
+        res.writeHead(200, headers);
+        res.end();
+    }
+});
 const SocketEvent = new socketEvents(io);
-
+//enable cors
+app.use(cors());
 // express routing
 app.use('/api', (req, res, next) => {
     req.SocketEvent = SocketEvent;
     next();
 }, router);
 // app.use(express.static('public'));
-
+//debugging
+app.get('/', (req, res)=>{
+    res.json({result:'success'});
+});
 // signaling
 io.on('connection', function (socket) {
     socket.on('message', function (message) {
