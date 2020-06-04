@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const https = require('https');
+const path = require('path');
 const http = require('http');
 const cors = require('cors');
 const config = require('./config');
@@ -45,11 +46,11 @@ app.use('/api', (req, res, next) => {
     req.SocketEvent = SocketEvent;
     next();
 }, router);
-// app.use(express.static('public'));
+app.use('/',express.static(path.join(__dirname,'../frontend/build')));
+app.use('/presenters',express.static(path.join(__dirname,'../frontend/build')));
+app.use('/static',express.static(path.join(__dirname,'../frontend/build/static')));
+app.use('/assets',express.static(path.join(__dirname,'../frontend/build/assets')));
 //debugging
-app.get('/', (req, res) => {
-    res.json({result: 'success'});
-});
 // signaling
 io.on('connection', function (socket) {
     socket.on('message', function (message) {
