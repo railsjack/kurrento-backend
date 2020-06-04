@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const https = require('https');
+const http = require('http');
 const cors = require('cors');
 const config = require('./config');
 const socketEvents = require('./controllers/socket_event');
@@ -16,7 +17,7 @@ if (config.mode === 'local') {
         };
     server = https.createServer(options, app);
 } else {
-    server = app;
+    server = http.createServer(app);
 }
 server.listen(config.server_port, function () {
     console.log('server up and running at %s port', config.server_port);
