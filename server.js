@@ -7,12 +7,17 @@ const socketEvents = require('./controllers/socket_event');
 const router = require('./routes/api');
 //Setup https server
 const app = express();
-const options =
-    {
-        key: fs.readFileSync(config.env[config.mode].ssl.key),
-        cert: fs.readFileSync(config.env[config.mode].ssl.cert)
-    };
-const server = https.createServer(options, app);
+let server;
+if (config.mode === 'local') {
+    const options =
+        {
+            key: fs.readFileSync(config.env[config.mode].ssl.key),
+            cert: fs.readFileSync(config.env[config.mode].ssl.cert)
+        };
+    server = https.createServer(options, app);
+} else {
+    server = app;
+}
 server.listen(config.server_port, function () {
     console.log('server up and running at %s port', config.server_port);
 });
