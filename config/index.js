@@ -1,6 +1,6 @@
 const config = {
     as_uri: 'https://video.zuluvideo.com:3000/',
-    ws_uri: 'ws://video.zuluvideo.com:8888/kurento',
+    ws_uri:'ws://video.zuluvideo.com:8888/kurento',
     server_port: 3000,
     mode: 'server',
     env: {
