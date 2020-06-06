@@ -53,6 +53,11 @@ app.use('/assets',express.static(path.join(__dirname,'../frontend/build/assets')
 //debugging
 // signaling
 io.on('connection', function (socket) {
+    socket.on('disconnecting', () => {
+        let data = Object.keys(socket.rooms);
+
+        SocketEvent.deleteUser(io,data);
+    });
     socket.on('message', function (message) {
         console.log('Message received: ', message.event);
         switch (message.event) {

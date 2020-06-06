@@ -61,7 +61,7 @@ class SocketEvent {
                 });
 
                 let existingUsers = [];
-                console.log('myRoom.participants',myRoom.participants);
+                console.log(myRoom.participants, 'myRoom.participants');
                 for (let i in myRoom.participants) {
                     if (myRoom.participants[i].id !== user.id) {
                         existingUsers.push({
@@ -79,6 +79,19 @@ class SocketEvent {
 
                 myRoom.participants[user.id] = user;
             });
+        });
+    }
+
+    deleteUser(io, userData) {
+        const rooms = this.io.sockets.adapter.rooms;
+        const deleteUser =userData[0];
+        const roomNumber  = userData[1];
+        delete rooms[deleteUser];
+        if(rooms[roomNumber]) delete rooms[roomNumber]['sockets'][deleteUser];
+        if(rooms[roomNumber]) delete rooms[roomNumber]['participants'][deleteUser];
+        io.sockets.emit('message', {
+            event: 'deleteUser',
+            deleteUser
         });
     }
 
