@@ -1,7 +1,7 @@
 const kurento = require('kurento-client');
 const minimist = require('minimist');
-const config = require('../config');
-
+require('dotenv').config();
+const config = require('../config/config.' + process.env.MODE.toLowerCase());
 let kurentoClient = null;
 const iceCandidateQueues = {};
 
@@ -26,8 +26,6 @@ class SocketEvent {
                 }
                 let myRoom = this.io.sockets.adapter.rooms[roomname] || {length: 0};
                 let numClients = myRoom.length;
-                let isPresenter = false;
-                if (numClients === 1) isPresenter = true;
                 const user = {
                     id: socket.id,
                     name: username,
@@ -48,7 +46,6 @@ class SocketEvent {
                     socket.emit('message', {
                         event: 'candidate',
                         userid: user.id,
-                        isPresenter,
                         candidate: candidate
                     });
                 });
@@ -57,11 +54,9 @@ class SocketEvent {
                     event: 'newParticipantArrived',
                     userid: user.id,
                     username: user.name,
-                    isPresenter,
                 });
 
                 let existingUsers = [];
-                console.log(myRoom.participants, 'myRoom.participants');
                 for (let i in myRoom.participants) {
                     if (myRoom.participants[i].id !== user.id) {
                         existingUsers.push({
@@ -74,7 +69,6 @@ class SocketEvent {
                     event: 'existingParticipants',
                     existingUsers: existingUsers,
                     userid: user.id,
-                    isPresenter
                 });
 
                 myRoom.participants[user.id] = user;
@@ -84,11 +78,13 @@ class SocketEvent {
 
     deleteUser(io, userData) {
         const rooms = this.io.sockets.adapter.rooms;
-        const deleteUser =userData[0];
-        const roomNumber  = userData[1];
+        const deleteUser = userData[0];
+        const roomNumber = userData[1];
         delete rooms[deleteUser];
-        if(rooms[roomNumber]) delete rooms[roomNumber]['sockets'][deleteUser];
-        if(rooms[roomNumber]) delete rooms[roomNumber]['participants'][deleteUser];
+        if (rooms[roomNumber]) delete rooms[roomNumber]['sockets'][deleteUser];
+        if (rooms[roomNumber]) {
+            if (rooms[roomNumber]['participants']) delete rooms[roomNumber]['participants'][deleteUser]
+        }
         io.sockets.emit('message', {
             event: 'deleteUser',
             deleteUser
@@ -150,9 +146,7 @@ class SocketEvent {
     getRoom(socket, roomname, callback) {
         let myRoom = this.io.sockets.adapter.rooms[roomname] || {length: 0};
         let numClients = myRoom.length;
-
         console.log(roomname, ' has ', numClients, ' clients');
-
         if (numClients === 0) {
             socket.join(roomname, () => {
                 myRoom = this.io.sockets.adapter.rooms[roomname];
@@ -192,9 +186,9 @@ class SocketEvent {
     }
 
     getEndpointForUser(socket, roomname, senderid, callback) {
-        var myRoom = this.io.sockets.adapter.rooms[roomname];
-        var asker = myRoom.participants[socket.id];
-        var sender = myRoom.participants[senderid];
+        const myRoom = this.io.sockets.adapter.rooms[roomname];
+        const asker = myRoom.participants[socket.id];
+        const sender = myRoom.participants[senderid];
 
         if (asker.id === sender.id) {
             return callback(null, asker.outgoingMedia);

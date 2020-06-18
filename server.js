@@ -1,32 +1,39 @@
-const express = require('express');
-const fs = require('fs');
-const https = require('https');
-const path = require('path');
-const http = require('http');
-const cors = require('cors');
-const config = require('./config');
-const socketEvents = require('./controllers/socket_event');
-const router = require('./routes/api');
+import express from "express";
+import fs from "fs";
+import https from "https";
+import http from "http";
+import bodyParser from "body-parser";
+import cors from "cors";
+import mongoose from "mongoose";
+import {socketEventsController} from "./controllers";
+import router from "./routes";
+
+require('dotenv').config();
+const config = require('./config/config.' + process.env.MODE.toLowerCase());
 //Setup https server
 const app = express();
 let server;
-if (config.mode === 'local') {
+if (process.env.MODE.toLowerCase() === 'local') {
     const options =
         {
-            key: fs.readFileSync(config.env[config.mode].ssl.key),
-            cert: fs.readFileSync(config.env[config.mode].ssl.cert)
+            key: fs.readFileSync(config.ssl.key),
+            cert: fs.readFileSync(config.ssl.cert)
         };
     server = https.createServer(options, app);
 } else {
     server = http.createServer(app);
 }
-server.listen(config.server_port, function () {
-    console.log('server up and running at %s port', config.server_port);
+server.listen(config.server_port, async function () {
+    await mongoose.connect("mongodb://localhost/osvdb");
 });
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser({limit: '50mb'}));
+app.use(bodyParser.json());
+//enable cors
+app.use(cors());
 //Initialize the socket server
 const io = require('socket.io')(server, {
     handlePreflightRequest: (req, res) => {
-        console.log('req.header.origin', req.headers.origin);
         const headers = {
             "Access-Control-Allow-Headers": "Content-Type, Authorization",
             "Access-Control-Allow-Origin": req.headers.origin, //or the specific origin you want to give access to,
@@ -38,32 +45,20 @@ const io = require('socket.io')(server, {
 });
 io.origins('*:*');
 
-const SocketEvent = new socketEvents(io);
-//enable cors
-app.use(cors());
-// express routing
-app.use('/api', (req, res, next) => {
-    req.SocketEvent = SocketEvent;
-    next();
-}, router);
-app.use('/',express.static(path.join(__dirname,'../frontend/build')));
-app.use('/presenters',express.static(path.join(__dirname,'../frontend/build')));
-app.use('/static',express.static(path.join(__dirname,'../frontend/build/static')));
-app.use('/assets',express.static(path.join(__dirname,'../frontend/build/assets')));
+const SocketEvent = new socketEventsController(io);
 //debugging
 // signaling
 io.on('connection', function (socket) {
     socket.on('disconnecting', () => {
         let data = Object.keys(socket.rooms);
-
-        SocketEvent.deleteUser(io,data);
+        SocketEvent.deleteUser(io, data);
     });
     socket.on('message', function (message) {
-        console.log('Message received: ', message.event);
         switch (message.event) {
             case 'joinRoom':
+                console.log(message.audienceRoom,'message.audienceRoom');
                 // joinRoom(socket, message.userName, message.roomName, err => {
-                SocketEvent.joinRoom(socket, message.userName, message.roomName, err => {
+                SocketEvent.joinRoom(socket, message.userName, message.roomName, message.audienceRoom, err => {
                     if (err) {
                         console.log(err);
                     }
@@ -88,3 +83,4 @@ io.on('connection', function (socket) {
         }
     });
 });
+router(app, SocketEvent);

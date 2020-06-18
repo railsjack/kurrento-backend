@@ -1,9 +1,9 @@
 const config = {
     as_uri: 'https://video.zuluvideo.com/',
-    ws_uri:'ws://video.zuluvideo.com:8888/kurento',
-    // ws_uri:'ws://192.168.0.3:8888/kurento',
+    // ws_uri:'ws://video.zuluvideo.com:8888/kurento',
+    ws_uri:'ws://192.168.0.3:8888/kurento',
     server_port: 3000,
-    mode: 'server',
+    mode: 'local',
     env: {
         local: {
             ssl: {

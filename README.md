@@ -10,3 +10,7 @@ In the project root directory, run this command:
 ## Configuration
 
 You can change the port of the server and remote socket url in the `config/api.js`
+
+## How to run the project on local
+
+nodemon -r esm server.js
