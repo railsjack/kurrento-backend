@@ -20,6 +20,10 @@ router.post('/deleteOrg', async function (req, res) {
     const data = await orgCtrl.deleteOrg(req.body);
     res.json(data);
 });
+router.post('/getOrgsForEvent', async function (req, res) {
+    const data = await orgCtrl.getOrgsForEvent(req.body);
+    res.json(data);
+});
 router.post('/getOrgById', async function (req, res) {
     const data = await orgCtrl.getOrgById(req.body);
     res.json(data);

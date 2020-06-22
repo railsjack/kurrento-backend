@@ -15,13 +15,11 @@ const config = {
         org: {
             bgImages: path.join(__dirname, '../public/assets/images/org/bgImages'),
             logoURL: path.join(__dirname, '../public/assets/images/org/logos')
+        },
+        event:{
+            bgImages: path.join(__dirname, '../public/assets/images/event/bgImages'),
+            waterMarks :path.join(__dirname, '../public/assets/images/event/waterMarks')
         }
-    },
-    getImgRelativePath(absolutePath) {
-        if (path.isAbsolute(absolutePath)) {
-            return '\\' + absolutePath.substr(absolutePath.indexOf('public'), absolutePath.length);
-        }
-        return;
     },
     exceptionHandlers: {
         DB_CONNECTION_ERROR: {
@@ -63,6 +61,16 @@ const config = {
             result: 'success',
             status: 200,
             msg: 'Organization info has been successfully deleted.'
+        },
+        EVENT_INFO_DELETED: {
+            result: 'success',
+            status: 200,
+            msg: 'Event info has been successfully deleted.'
+        },
+        EVENT_INFO_SAVED: {
+            result: 'success',
+            status: 200,
+            msg: 'Event info has been successfully saved.'
         },
         NETWORK_NOT_FOUND: {
             result: 'error',

@@ -9,26 +9,66 @@ const {as_uri, ws_uri} = config;
 const argv = minimist(process.argv.slice(2), {
     default: {as_uri, ws_uri}
 });
-
+// import {EventController, UserController} from "../controllers";
+const controllers = require('../controllers');
 class SocketEvent {
     constructor(io) {
         this.io = io;
     }
 
-    joinRoom(socket, username, roomname, callback) {
-        this.getRoom(socket, roomname, (err, myRoom) => {
+    getRoom(socket, roomname, callback) {
+        let myRoom = this.io.sockets.adapter.rooms[roomname] || {length: 0};
+
+        let numClients = myRoom.length;
+        console.log(roomname, ' has ', numClients, ' clients');
+        if (numClients === 0) {
+            socket.join(roomname, () => {
+                myRoom = this.io.sockets.adapter.rooms[roomname];
+                this.getKurentoClient((error, kurento) => {
+                    kurento.create('MediaPipeline', (err, pipeline) => {
+                        if (error) {
+                            return callback(err);
+                        }
+
+                        myRoom.pipeline = pipeline;
+                        myRoom.participants = {};
+                        callback(null, myRoom);
+                    });
+                });
+            });
+        } else {
+            socket.join(roomname);
+            callback(null, myRoom);
+        }
+    }
+    async checkIfPresenter(name, room){
+        const UserController = controllers.UserController;
+        const EventController = controllers.EventController;
+        const userCtrl = new UserController();
+        const eventCtrl = new EventController();
+        const userResultData = await userCtrl.getUsersFieldsByParams({name},{_id:0});
+        if(userResultData.result!=='success') return false;
+        if(!userResultData.data.length>0) return false;
+        const eventData = await eventCtrl.getEventsFieldsByParams({user_id:userResultData.data[0].user_id, event_id:room},{_id:0});
+        if(eventData.data.length>0) return true;
+
+    }
+    joinRoom(socket, username, roomname,audienceRoom,isPresenter, callback) {
+        this.getRoom(socket, roomname,  (err, myRoom) => {
             if (err) {
                 return callback(err);
             }
-            myRoom.pipeline.create('WebRtcEndpoint', (err, outgoingMedia) => {
+            myRoom.pipeline.create('WebRtcEndpoint', async (err, outgoingMedia) => {
                 if (err) {
                     return callback(err);
                 }
                 let myRoom = this.io.sockets.adapter.rooms[roomname] || {length: 0};
-                let numClients = myRoom.length;
+                isPresenter = await this.checkIfPresenter(username,roomname);
                 const user = {
                     id: socket.id,
                     name: username,
+                    audienceRoom:audienceRoom,
+                    isPresenter:isPresenter,
                     outgoingMedia: outgoingMedia,
                     incomingMedia: {}
                 };
@@ -46,7 +86,9 @@ class SocketEvent {
                     socket.emit('message', {
                         event: 'candidate',
                         userid: user.id,
-                        candidate: candidate
+                        candidate: candidate,                        
+                        audienceRoom:user.audienceRoom,
+                        isPresenter:user.isPresenter
                     });
                 });
 
@@ -54,6 +96,8 @@ class SocketEvent {
                     event: 'newParticipantArrived',
                     userid: user.id,
                     username: user.name,
+                    audienceRoom:user.audienceRoom,
+                    isPresenter:user.isPresenter
                 });
 
                 let existingUsers = [];
@@ -62,6 +106,8 @@ class SocketEvent {
                         existingUsers.push({
                             id: myRoom.participants[i].id,
                             name: myRoom.participants[i].name,
+                            audienceRoom: myRoom.participants[i].audienceRoom,
+                            isPresenter: myRoom.participants[i].isPresenter,
                         });
                     }
                 }
@@ -69,6 +115,8 @@ class SocketEvent {
                     event: 'existingParticipants',
                     existingUsers: existingUsers,
                     userid: user.id,
+                    audienceRoom:user.audienceRoom,
+                    isPresenter:user.isPresenter
                 });
 
                 myRoom.participants[user.id] = user;
@@ -77,18 +125,19 @@ class SocketEvent {
     }
 
     deleteUser(io, userData) {
-        const rooms = this.io.sockets.adapter.rooms;
-        const deleteUser = userData[0];
-        const roomNumber = userData[1];
-        delete rooms[deleteUser];
-        if (rooms[roomNumber]) delete rooms[roomNumber]['sockets'][deleteUser];
-        if (rooms[roomNumber]) {
-            if (rooms[roomNumber]['participants']) delete rooms[roomNumber]['participants'][deleteUser]
-        }
-        io.sockets.emit('message', {
-            event: 'deleteUser',
-            deleteUser
-        });
+        // const rooms = this.io.sockets.adapter.rooms;
+        // const deleteUser = userData[0];
+        // const roomNumber = userData[1];
+        // delete rooms[deleteUser];
+        // if (rooms[roomNumber]) delete rooms[roomNumber]['sockets'][deleteUser];
+
+        // if (rooms[roomNumber]) {
+        //     if (rooms[roomNumber]['participants']) delete rooms[roomNumber]['participants'][deleteUser]
+        // }
+        // io.sockets.emit('message', {
+        //     event: 'deleteUser',
+        //     deleteUser
+        // });
     }
 
     receiveVideoFrom(socket, userid, roomname, sdpOffer, callback) {
@@ -143,31 +192,6 @@ class SocketEvent {
         }
     }
 
-    getRoom(socket, roomname, callback) {
-        let myRoom = this.io.sockets.adapter.rooms[roomname] || {length: 0};
-        let numClients = myRoom.length;
-        console.log(roomname, ' has ', numClients, ' clients');
-        if (numClients === 0) {
-            socket.join(roomname, () => {
-                myRoom = this.io.sockets.adapter.rooms[roomname];
-                this.getKurentoClient((error, kurento) => {
-                    kurento.create('MediaPipeline', (err, pipeline) => {
-                        if (error) {
-                            return callback(err);
-                        }
-
-                        myRoom.pipeline = pipeline;
-                        myRoom.participants = {};
-                        callback(null, myRoom);
-                    });
-                });
-            });
-        } else {
-            socket.join(roomname);
-            callback(null, myRoom);
-        }
-    }
-
     getKurentoClient(callback) {
         if (kurentoClient !== null) {
             return callback(null, kurentoClient);
@@ -189,7 +213,6 @@ class SocketEvent {
         const myRoom = this.io.sockets.adapter.rooms[roomname];
         const asker = myRoom.participants[socket.id];
         const sender = myRoom.participants[senderid];
-
         if (asker.id === sender.id) {
             return callback(null, asker.outgoingMedia);
         }
@@ -223,7 +246,9 @@ class SocketEvent {
                     socket.emit('message', {
                         event: 'candidate',
                         userid: sender.id,
-                        candidate: candidate
+                        candidate: candidate,
+                        audienceRoom:sender.audienceRoom,
+                        isPresenter:sender.isPresenter
                     });
                 });
 

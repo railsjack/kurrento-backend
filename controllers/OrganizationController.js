@@ -5,24 +5,10 @@ const config = require('../config/config.' + process.env.MODE.toLowerCase());
 import base64Img from 'base64-img';
 import rimraf from "rimraf";
 import {OsvOrgs, OsvOrgStaff} from "../database/model";
-
+import {ImageUtils} from '../utils';
 class OrganizationController {
-
-    getBgImagesPath(org_id) {
-
-        const bgImagesPath = config.filePath.org.bgImages + '/' + org_id;
-        if (!fs.existsSync(bgImagesPath)) fs.mkdirSync(bgImagesPath, {recursive: true});
-        return bgImagesPath;
-    }
-
-    getLogoUrlPath(org_id) {
-        const logoPath = config.filePath.org.logoURL + '/' + org_id;
-        if (!fs.existsSync(logoPath)) fs.mkdirSync(logoPath, {recursive: true});
-        return logoPath;
-    }
-
-    getValidBase64Image(image) {
-        return image.replace(/name\=.*?;/, '');
+    constructor(){
+        this.imageUtils = new ImageUtils();
     }
 
     saveStaffInfoIntoDB(params) {
@@ -83,17 +69,17 @@ class OrganizationController {
         let isNew = false;
         if (!org_id) isNew = true;
         if (isNew) org_id = String(Date.now()).substr(1, String(Date.now()).length)
-        const bgImagesPath = this.getBgImagesPath(org_id);
-        const logoPath = this.getLogoUrlPath(org_id);
-        let logoImage = this.getValidBase64Image(logo_url);
-        const logoResponse = config.getImgRelativePath(base64Img.imgSync(logoImage, logoPath, Date.now()));
+        const bgImagesPath = this.imageUtils.getOrgBgImagesPath(org_id);
+        const logoPath = this.imageUtils.getOrgLogoUrlPath(org_id);
+        let logoImage = this.imageUtils.getValidBase64Image(logo_url);
+        const logoResponse = this.imageUtils.getImgRelativePath(base64Img.imgSync(logoImage, logoPath, Date.now()));
         let backgroundImageArray = [];
 
         bg_images.forEach((img) => {
-            img = this.getValidBase64Image(img);
-            backgroundImageArray.push(config.getImgRelativePath(base64Img.imgSync(img, bgImagesPath, Date.now())));
+            img = this.imageUtils.getValidBase64Image(img);
+            backgroundImageArray.push(this.imageUtils.getImgRelativePath(base64Img.imgSync(img, bgImagesPath, Date.now())));
         });
-
+        
         const dbResponse = this.saveOrgInfoIntoDB({
             org_id,
             owner_user_id,
@@ -117,10 +103,9 @@ class OrganizationController {
 
     }
 
-    getDataByUserId(params) {
-        let user_id = params.user_id;
+    getOrgsFieldsByParams(filters, fields={}){
         return new Promise((resolve, reject) => {
-            OsvOrgs.find({owner_user_id: user_id}, (err, orgs) => {
+            OsvOrgs.find(filters,fields, (err, orgs) => {
                 if (err) {
                     reject({data: config.exceptionHandlers.DB_CONNECTION_ERROR});
                 } else {
@@ -134,16 +119,25 @@ class OrganizationController {
             });
         })
     }
-    getOrgById(params){
-        const org_id = params.id;
+
+    async getDataByUserId(params) {
+        return await this.getOrgsFieldsByParams({owner_user_id:params.user_id});
+    }
+
+
+    async getOrgById(params){
+        return await this.getOrgsFieldsByParams({org_id:params.id});
+    }
+
+    getStaffsFieldsByParams(filters, fields={}){
         return new Promise((resolve, reject) => {
-            OsvOrgs.find({org_id}, (err, orgs) => {
+            OsvOrgStaff.find(filters,fields, (err, orgs) => {
                 if (err) {
                     reject({data: config.exceptionHandlers.DB_CONNECTION_ERROR});
                 } else {
                     resolve({
                         status: 200,
-                        msg: 'Successfully fetched.',
+                        msg: 'Successfully listed.',
                         result: 'success',
                         data: orgs
                     });
@@ -151,6 +145,22 @@ class OrganizationController {
             });
         })
     }
+    
+    async getOrgsForEvent(params){
+        let user_id = params.user_id;
+        let orgIds=[];
+        return new Promise(async (resolve, reject) => {
+            const responseData = await this.getStaffsFieldsByParams({user_id},{org_id:1,_id: 0})
+            .catch(err=>{
+                reject(err);
+            });
+            responseData.data.forEach(item=>{orgIds.push(item.org_id)})
+            const data = await this.getOrgsFieldsByParams({org_id:{ $in: orgIds}},{name:1,org_id:1, _id:0});
+            resolve(data);
+        })
+        return data;
+    }
+
     deleteOrgStaffByOrgId(org_id) {
         return new Promise(async (resolve, reject) => {
             try {

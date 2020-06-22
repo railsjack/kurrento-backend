@@ -4,6 +4,9 @@ const osvEventSchema = new Schema({
     event_id: {
         type: String
     },
+    user_id: {
+        type: String
+    },
     org_id: {
         type: String
     },
@@ -12,7 +15,7 @@ const osvEventSchema = new Schema({
     },
     bg_image: {
         type: String
-    }
+    },
     default_video_watermark: {
         type: String
     }
