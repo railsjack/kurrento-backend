@@ -18,7 +18,6 @@ class SocketEvent {
 
     getRoom(socket, roomname, callback) {
         let myRoom = this.io.sockets.adapter.rooms[roomname] || {length: 0};
-
         let numClients = myRoom.length;
         console.log(roomname, ' has ', numClients, ' clients');
         if (numClients === 0) {
@@ -55,6 +54,7 @@ class SocketEvent {
     }
     joinRoom(socket, username, roomname,audienceRoom,isPresenter, callback) {
         this.getRoom(socket, roomname,  (err, myRoom) => {
+            console.log(roomname,'roomname')
             if (err) {
                 return callback(err);
             }
@@ -124,16 +124,11 @@ class SocketEvent {
         });
     }
 
-    deleteUser(io, userData) {
-        // const rooms = this.io.sockets.adapter.rooms;
-        // const deleteUser = userData[0];
-        // const roomNumber = userData[1];
-        // delete rooms[deleteUser];
-        // if (rooms[roomNumber]) delete rooms[roomNumber]['sockets'][deleteUser];
-
-        // if (rooms[roomNumber]) {
-        //     if (rooms[roomNumber]['participants']) delete rooms[roomNumber]['participants'][deleteUser]
-        // }
+    deleteUser(io, socket) {
+        // const rooms = io.sockets.adapter.rooms;
+        // Object.keys(rooms).forEach(item=>{
+        //        if(rooms[item]['participants']) if(rooms[item]['participants'][socket.id]) delete rooms[item]['participants'][socket.id]
+        // });
         // io.sockets.emit('message', {
         //     event: 'deleteUser',
         //     deleteUser

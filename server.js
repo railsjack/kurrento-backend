@@ -48,10 +48,22 @@ io.origins('*:*');
 const SocketEvent = new socketEventsController(io);
 //debugging
 // signaling
+
 io.on('connection', function (socket) {
-    socket.on('disconnecting', () => {
-        let data = Object.keys(socket.rooms);
-        SocketEvent.deleteUser(io, data);
+    socket.on('disconnecting', (res, id) => {
+         
+        // let data = Object.keys(socket.rooms);
+        // SocketEvent.deleteUser(io, data);
+    });
+    socket.on('disconnect', function () {
+        const rooms = io.sockets.adapter.rooms;
+        Object.keys(rooms).forEach(item=>{
+               if(rooms[item]['participants']) if(rooms[item]['participants'][socket.id]) delete rooms[item]['participants'][socket.id]
+        });
+        io.sockets.emit('message', {
+            event: 'deleteUser',
+            deleteUser:socket.id
+        });
     });
     socket.on('message', function (message) {
         switch (message.event) {

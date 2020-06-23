@@ -3,8 +3,7 @@ import {Schema} from "mongoose";
 const osvUserSchema = new Schema({
     user_id: {
         type: String,
-        required: true,
-        unique: true
+        required: true
     },
     name: {
         type: String,
