@@ -1,3 +1,4 @@
+const path = require('path');
 const config = {
     as_uri: 'https://video.zuluvideo.com/',
     ws_uri: 'ws://video.zuluvideo.com:8888/kurento',
