@@ -24,6 +24,7 @@ module.exports = function (app, SocketEvent) {
     app.use('/organization/list', express.static(path.join(__dirname, '../../frontend/build')));
     app.use('/organization/:id/edit', express.static(path.join(__dirname, '../../frontend/build')));
     app.use('/events/:id/:name/live', express.static(path.join(__dirname, '../../frontend/build')));
+    app.use('/event/:id', express.static(path.join(__dirname, '../../frontend/build')));
     app.use('/home', express.static(path.join(__dirname, '../../frontend/build')));
     app.use('/signin', express.static(path.join(__dirname, '../../frontend/build')));
     app.use('/default/presenters/', express.static(path.join(__dirname, '../../frontend/build')));
@@ -31,6 +32,7 @@ module.exports = function (app, SocketEvent) {
     app.use('/signup', express.static(path.join(__dirname, '../../frontend/build')));
     app.use('/presenters/all', express.static(path.join(__dirname, '../../frontend/build')));
     app.use('/presenters/:id/:username/:audience_room/live', express.static(path.join(__dirname, '../../frontend/build')));
+    app.use('/_PRESENT_/:id', express.static(path.join(__dirname, '../../frontend/build')));
     app.use('/presenters/:id', express.static(path.join(__dirname, '../../frontend/build')));
     app.use('/static', express.static(path.join(__dirname, '../../frontend/build/static')));
     app.use('/assets', express.static(path.join(__dirname, '../../frontend/build/assets')));
