@@ -52,9 +52,28 @@ class SocketEvent {
         if(eventData.data.length>0) return true;
 
     }
+    getAudicenRoomNumber(participants){
+        var chunk_size = config.audienceCountPerRoom;
+        var participantKeys = Object.keys(participants);
+        var groups = participantKeys.map( function(e,i){ 
+             return i%chunk_size===0 ? participantKeys.slice(i,i+chunk_size) : null; 
+        }).filter(function(e){return e; });
+        groups.forEach((item,index)=>{
+            item.forEach(child=>{
+                const elem = participants[child];
+                if(elem['isPresenter']){
+                    elem['audienceRoom'] = index+1;
+                }else{
+                    elem['audienceRoom'] = 0;    
+                }
+                
+            })
+
+        })
+        return 100;
+    }
     joinRoom(socket, username, roomname,audienceRoom,isPresenter, callback) {
         this.getRoom(socket, roomname,  (err, myRoom) => {
-            console.log(roomname,'roomname')
             if (err) {
                 return callback(err);
             }
@@ -64,6 +83,8 @@ class SocketEvent {
                 }
                 let myRoom = this.io.sockets.adapter.rooms[roomname] || {length: 0};
                 isPresenter = await this.checkIfPresenter(username,roomname);
+
+                audienceRoom = this.getAudicenRoomNumber(myRoom.participants);
                 const user = {
                     id: socket.id,
                     name: username,

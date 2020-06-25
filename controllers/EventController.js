@@ -31,6 +31,12 @@ class EventController {
     async getDataByUserId(params) {
         return await this.getEventsFieldsByParams({user_id:params.user_id},{_id:0});
     }
+
+    async getDataByEventId(params){
+        return await this.getEventsFieldsByParams({event_id:params.id},{_id:0});
+        
+    }
+
     saveEventInfoIntoDB(params){
 	 	return new Promise((resolve, reject) => {
             let {event_id,user_id, org_id, name, bg_image, default_video_watermark} = params;

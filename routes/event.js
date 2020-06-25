@@ -11,6 +11,10 @@ router.post('/list', async function (req, res) {
     const data = await eventCtrl.getDataByUserId(req.body);
     res.json(data);
 });
+router.get('/:id/get', async function (req, res) {
+    const data = await eventCtrl.getDataByEventId(req.params);
+    res.json(data);
+});
 router.post('/save', async function (req, res) {
     const data = await eventCtrl.saveData(req.body);
     res.json(data);

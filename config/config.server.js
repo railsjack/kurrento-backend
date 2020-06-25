@@ -18,6 +18,7 @@ const config = {
             waterMarks :path.join(__dirname, '../public/assets/images/event/waterMarks')
         }
     },
+    audienceCountPerRoom:3,
     exceptionHandlers: {
         DB_CONNECTION_ERROR: {
             result: 'error',
