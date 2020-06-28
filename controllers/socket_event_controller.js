@@ -83,7 +83,7 @@ class SocketEvent {
                 }
                 let myRoom = this.io.sockets.adapter.rooms[roomname] || {length: 0};
                 isPresenter = await this.checkIfPresenter(username,roomname);
-
+                console.log(isPresenter,'isPresenter')
                 audienceRoom = this.getAudicenRoomNumber(myRoom.participants);
                 const user = {
                     id: socket.id,
