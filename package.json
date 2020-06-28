@@ -19,7 +19,7 @@
     "express": "^4.17.1",
     "express-force-ssl": "^0.3.2",
     "kurento-client": "^6.13.0",
-    "minimist": "1.2.0",
+    "minimist": "1.2.3",
     "mongoose": "^5.9.18",
     "nodemon": "^2.0.4",
     "options": "0.0.6",
