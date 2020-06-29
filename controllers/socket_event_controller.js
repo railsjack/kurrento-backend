@@ -50,29 +50,32 @@ class SocketEvent {
         if(!userResultData.data.length>0) return false;
         const eventData = await eventCtrl.getEventsFieldsByParams({user_id:userResultData.data[0].user_id, event_id:room},{_id:0});
         if(eventData.data.length>0) return true;
+                console.log(eventData,'eventData')
+
 
     }
     getAudicenRoomNumber(participants){
-        var chunk_size = config.audienceCountPerRoom;
-        var participantKeys = Object.keys(participants);
-        var groups = participantKeys.map( function(e,i){ 
-             return i%chunk_size===0 ? participantKeys.slice(i,i+chunk_size) : null; 
-        }).filter(function(e){return e; });
-        groups.forEach((item,index)=>{
-            item.forEach(child=>{
-                const elem = participants[child];
-                if(elem['isPresenter']){
-                    elem['audienceRoom'] = index+1;
-                }else{
-                    elem['audienceRoom'] = 0;    
-                }
-                
-            })
+        // const chunk_size = config.audienceCountPerRoom;
+        // const participantKeys = Object.keys(participants);
+        // const groups = participantKeys.map( function(e,i){ 
+        //      return i%chunk_size===0 ? participantKeys.slice(i,i+chunk_size) : null; 
+        // }).filter(function(e){return e; });
+        // groups.forEach((item,index)=>{
+        //     item.forEach(child=>{
+        //         const elem = participants[child];
+        //         if(elem['isPresenter']){
+        //             elem['audienceRoom'] = index+1;
+        //         }else{
+        //             elem['audienceRoom'] = 0;    
+        //         }
+        //     })
 
-        })
+        // })
         return 100;
     }
-    joinRoom(socket, username, roomname,audienceRoom,isPresenter, callback) {
+    joinRoom(socket, message, callback) {
+        let {username, roomname, userid, isPresenter} =message;
+        let audienceRoom;
         this.getRoom(socket, roomname,  (err, myRoom) => {
             if (err) {
                 return callback(err);
@@ -83,7 +86,6 @@ class SocketEvent {
                 }
                 let myRoom = this.io.sockets.adapter.rooms[roomname] || {length: 0};
                 isPresenter = await this.checkIfPresenter(username,roomname);
-                console.log(isPresenter,'isPresenter')
                 audienceRoom = this.getAudicenRoomNumber(myRoom.participants);
                 const user = {
                     id: socket.id,
@@ -93,6 +95,7 @@ class SocketEvent {
                     outgoingMedia: outgoingMedia,
                     incomingMedia: {}
                 };
+
                 let iceCandidateQueue = iceCandidateQueues[user.id];
                 if (iceCandidateQueue) {
                     while (iceCandidateQueue.length) {
@@ -156,8 +159,9 @@ class SocketEvent {
         // });
     }
 
-    receiveVideoFrom(socket, userid, roomname, sdpOffer, callback) {
-        this.getEndpointForUser(socket, roomname, userid, (err, endpoint) => {
+    receiveVideoFrom(socket, message, callback) {
+        let {userid, roomName, sdpOffer} = message;
+        this.getEndpointForUser(socket, roomName, userid, (err, endpoint) => {
             if (err) {
                 return callback(err);
             }
@@ -226,6 +230,7 @@ class SocketEvent {
     }
 
     getEndpointForUser(socket, roomname, senderid, callback) {
+
         const myRoom = this.io.sockets.adapter.rooms[roomname];
         const asker = myRoom.participants[socket.id];
         const sender = myRoom.participants[senderid];

@@ -69,7 +69,7 @@ io.on('connection', function (socket) {
         switch (message.event) {
             case 'joinRoom':
                 // joinRoom(socket, message.userName, message.roomName, err => {
-                SocketEvent.joinRoom(socket, message.userName, message.roomName, message.audienceRoom, message.isPresenter, err => {
+                SocketEvent.joinRoom(socket, message, err => {
                     if (err) {
                         console.log(err);
                     }
@@ -77,8 +77,7 @@ io.on('connection', function (socket) {
                 break;
 
             case 'receiveVideoFrom':
-
-                SocketEvent.receiveVideoFrom(socket, message.userid, message.roomName, message.sdpOffer, err => {
+                SocketEvent.receiveVideoFrom(socket, message, err => {
                     if (err) {
                         console.log(err);
                     }

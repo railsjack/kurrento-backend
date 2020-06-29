@@ -27,4 +27,9 @@ router.get('/all', async function (req, res){
 	const data = await eventCtrl.getAllData();
 	res.json(data);
 })
+router.post('/checkPresenter', async function (req, res){
+    const {user_id, event_id} = req.body;
+    const data = await eventCtrl.checkPresenter(user_id, event_id);
+    res.json(data);
+})
 module.exports = router;

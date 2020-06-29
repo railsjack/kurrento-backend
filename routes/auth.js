@@ -70,5 +70,4 @@ router.post('/facebook', async function (req, res) {
             res.send(config.exceptionHandlers.NETWORK_NOT_FOUND);
         });
 });
-
 module.exports = router;

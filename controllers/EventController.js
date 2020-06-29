@@ -140,7 +140,21 @@ class EventController {
             )
         });
     }
-
+    checkPresenter(user_id, event_id){
+        return new Promise((resolve, reject) => {
+            OsvEvents.find({user_id, event_id}, (err, events) => {
+                if (err) {
+                    reject({data: config.exceptionHandlers.DB_CONNECTION_ERROR})
+                } else {
+                    if (events.length > 0) {
+                        resolve({result:'success',status:200, msg:'Success.'})
+                    } else {
+                        reject({result:'error',status:400, msg:'Event doesn\'t exist.'})
+                    }
+                }
+            });
+        })
+    }
 }
 
 export default EventController;
