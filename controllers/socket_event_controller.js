@@ -54,24 +54,33 @@ class SocketEvent {
 
 
     }
-    getAudicenRoomNumber(participants){
-        // const chunk_size = config.audienceCountPerRoom;
-        // const participantKeys = Object.keys(participants);
-        // const groups = participantKeys.map( function(e,i){ 
-        //      return i%chunk_size===0 ? participantKeys.slice(i,i+chunk_size) : null; 
-        // }).filter(function(e){return e; });
-        // groups.forEach((item,index)=>{
-        //     item.forEach(child=>{
-        //         const elem = participants[child];
-        //         if(elem['isPresenter']){
-        //             elem['audienceRoom'] = index+1;
-        //         }else{
-        //             elem['audienceRoom'] = 0;    
-        //         }
-        //     })
-
-        // })
-        return 100;
+    getAudicenRoomNumber(participantsObj){
+        let audienceRoomNumber = 0;
+        participantsObj = Object.assign({},participantsObj);
+        const chunk_size = config.audienceCountPerRoom;
+        let participants=[];
+        const participantKeys = Object.keys(participantsObj);
+        Object.keys(participantsObj).map(item=>{
+            if(!participantsObj[item]['audienceRoom']){
+                participants.push(participantsObj[item])
+            }
+        })
+        if(participants.length>0){
+            let audienceRoomAry = [];
+            participants.forEach((item)=>{
+                audienceRoomAry.push(item.audienceRoom);
+            })
+            let maxofary = Math.max.apply(Math, audienceRoomAry);
+            const lastaudienceroomary = participants.filter((item)=>{
+               return item['audienceRoom'] ==maxofary;
+            })
+            if(lastaudienceroomary.length>chunk_size){
+                audienceRoomNumber =  maxofary+1;
+            }else{
+                audienceRoomNumber =  maxofary;
+            }
+        }
+        return audienceRoomNumber;
     }
     joinRoom(socket, message, callback) {
         let {username, roomname, userid, isPresenter} =message;
@@ -87,6 +96,8 @@ class SocketEvent {
                 let myRoom = this.io.sockets.adapter.rooms[roomname] || {length: 0};
                 isPresenter = await this.checkIfPresenter(username,roomname);
                 audienceRoom = this.getAudicenRoomNumber(myRoom.participants);
+                console.log(audienceRoom,'audienceRoom')
+                console.log(audienceRoom,'getAudicenRoomNumber')
                 const user = {
                     id: socket.id,
                     name: username,
