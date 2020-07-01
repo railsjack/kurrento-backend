@@ -18,6 +18,14 @@ const osvEventSchema = new Schema({
     },
     default_video_watermark: {
         type: String
+    },
+    watermark_position:{
+        type: Number,
+        default: 1
+    },
+    layout_type:{
+        type: Number,
+        default: 1
     }
 });
 

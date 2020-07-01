@@ -50,8 +50,7 @@ class SocketEvent {
         if(!userResultData.data.length>0) return false;
         const eventData = await eventCtrl.getEventsFieldsByParams({user_id:userResultData.data[0].user_id, event_id:room},{_id:0});
         if(eventData.data.length>0) return true;
-                console.log(eventData,'eventData')
-
+        console.log(eventData,'eventData')
 
     }
     getAudicenRoomNumber(participantsObj){
@@ -61,7 +60,7 @@ class SocketEvent {
         let participants=[];
         const participantKeys = Object.keys(participantsObj);
         Object.keys(participantsObj).map(item=>{
-            if(!participantsObj[item]['audienceRoom']){
+            if(!participantsObj[item]['isPresenter']){
                 participants.push(participantsObj[item])
             }
         })
@@ -74,7 +73,7 @@ class SocketEvent {
             const lastaudienceroomary = participants.filter((item)=>{
                return item['audienceRoom'] ==maxofary;
             })
-            if(lastaudienceroomary.length>chunk_size){
+            if(lastaudienceroomary.length>=chunk_size){
                 audienceRoomNumber =  maxofary+1;
             }else{
                 audienceRoomNumber =  maxofary;
@@ -96,8 +95,6 @@ class SocketEvent {
                 let myRoom = this.io.sockets.adapter.rooms[roomname] || {length: 0};
                 isPresenter = await this.checkIfPresenter(username,roomname);
                 audienceRoom = this.getAudicenRoomNumber(myRoom.participants);
-                console.log(audienceRoom,'audienceRoom')
-                console.log(audienceRoom,'getAudicenRoomNumber')
                 const user = {
                     id: socket.id,
                     name: username,
@@ -135,29 +132,36 @@ class SocketEvent {
                     isPresenter:user.isPresenter
                 });
 
-                let existingUsers = [];
-                for (let i in myRoom.participants) {
-                    if (myRoom.participants[i].id !== user.id) {
-                        existingUsers.push({
-                            id: myRoom.participants[i].id,
-                            name: myRoom.participants[i].name,
-                            audienceRoom: myRoom.participants[i].audienceRoom,
-                            isPresenter: myRoom.participants[i].isPresenter,
-                        });
-                    }
-                }
-                socket.emit('message', {
-                    event: 'existingParticipants',
-                    existingUsers: existingUsers,
-                    userid: user.id,
-                    audienceRoom:user.audienceRoom,
-                    isPresenter:user.isPresenter
-                });
-
+                this.getExistingUserList(socket,roomname,user);
                 myRoom.participants[user.id] = user;
             });
         });
     }
+
+    getExistingUserList(socket, roomname,user){
+        let myRoom = this.io.sockets.adapter.rooms[roomname] || {length: 0};
+        const participants = myRoom.participants;
+        let existingUsers = [];
+        for (let i in participants) {
+            if (participants[i].id !== user.id) {
+                existingUsers.push({
+                    id: participants[i].id,
+                    name: participants[i].name,
+                    audienceRoom: participants[i].audienceRoom,
+                    isPresenter: participants[i].isPresenter,
+                });
+            }
+        }
+        socket.emit('message', {
+            event: 'existingParticipants',
+            existingUsers: existingUsers,
+            userid: user.id,
+            audienceRoom:user.audienceRoom,
+            isPresenter:user.isPresenter
+        });
+    }
+
+
 
     deleteUser(io, socket) {
         // const rooms = io.sockets.adapter.rooms;

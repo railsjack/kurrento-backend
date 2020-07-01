@@ -91,6 +91,14 @@ io.on('connection', function (socket) {
                     }
                 });
                 break;
+            case 'getExisingUsers':
+                SocketEvent.getExistingUserList(socket, message, err => {
+                    if (err) {
+                        console.log(err);
+                    }
+                });
+                break;
+            break;
         }
     });
 });
