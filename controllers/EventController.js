@@ -39,8 +39,8 @@ class EventController {
 
     saveEventInfoIntoDB(params){
 	 	return new Promise((resolve, reject) => {
-            let {event_id,user_id, org_id, name, bg_image, default_video_watermark} = params;
-	        OsvEvents.find({
+            let {event_id,user_id, org_id, name, bg_image, default_video_watermark, watermark_position} = params;
+            OsvEvents.find({
 	            event_id
 	        }, (err, osvEvents) => {
 	            let event;
@@ -58,6 +58,7 @@ class EventController {
                     event.org_id = org_id;
 	                event.name = name;
 	                event.default_video_watermark = default_video_watermark;
+                    event.watermark_position = watermark_position;
 	                event.bg_image = bg_image;
 	                event.save();
 	                resolve({data:config.exceptionHandlers.EVENT_INFO_SAVED})
@@ -81,7 +82,7 @@ class EventController {
 	       	const img = this.imageUtils.getValidBase64Image(bg_image);
 	        bg_image = this.imageUtils.getImgRelativePath(base64Img.imgSync(img, bgImagesPath, Date.now()));
 	        const dbResponse = await this.saveEventInfoIntoDB({
-	            event_id,user_id, org_id, name, bg_image, default_video_watermark:waterMarkResponse
+	            event_id,user_id, org_id, name, bg_image, default_video_watermark:waterMarkResponse, watermark_position
 	        });
 	        resolve(dbResponse);
     	})
